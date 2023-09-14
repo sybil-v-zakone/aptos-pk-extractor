@@ -1,4 +1,9 @@
-import hashlib, hmac, struct
+import hashlib
+import hmac
+import struct
+
+from aptos_sdk import ed25519
+from aptos_sdk.account_address import AccountAddress
 from ecdsa.curves import Ed25519
 
 BIP39_PBKDF2_ROUNDS = 2048
@@ -7,6 +12,7 @@ BIP32_PRIVDEV = 0x80000000
 BIP32_SEED_ED25519 = b'ed25519 seed'
 APTOS_DERIVATION_PATH = "m/44'/637'/0'/0'/0'"
 private_keys = []
+addresses = []
 
 class PublicKey25519:
     def __init__(self, private_key):
@@ -64,6 +70,10 @@ def parse_derivation_path():
     
     return path
 
+def get_account_address(private_key: str):
+    private_key = ed25519.PrivateKey.from_hex(private_key)
+    return AccountAddress.from_key(private_key.public_key()).hex()
+
 
 with open("phrases.txt", 'r', encoding='utf-8-sig') as file:
     phrases = [line.strip() for line in file]
@@ -71,6 +81,13 @@ with open("phrases.txt", 'r', encoding='utf-8-sig') as file:
 for phrase in phrases:
     private_keys.append(mnemonic_to_private_key(phrase).hex())
 
+for private_key in private_keys:
+    addresses.append(get_account_address(private_key))
+
 with open('private_keys.txt', 'w') as file:
     for item in private_keys:
+        file.write(str(item) + '\n')
+
+with open('addresses.txt', 'w') as file:
+    for item in addresses:
         file.write(str(item) + '\n')
